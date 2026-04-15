@@ -43,6 +43,18 @@ function App() {
                     <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', lineHeight: '1' }}>{user.nome}</span>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>{user.perfil}</span>
                   </div>
+                  
+                  {user.perfil === 'admin' && (
+                    <Link to="/painel-admin" style={{ background: '#0a4d8c', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: '700', textDecoration: 'none' }}>
+                      PAINEL
+                    </Link>
+                  )}
+                  {user.perfil === 'servidor' && (
+                    <Link to="/painel-servidor" style={{ background: '#127246', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: '700', textDecoration: 'none' }}>
+                      PAINEL
+                    </Link>
+                  )}
+
                   <button onClick={logout} style={{ background: '#f1f5f9', border: 'none', borderRadius: '0.5rem', padding: '0.5rem', cursor: 'pointer', color: '#64748b', display: 'flex' }} title="Sair">
                     <LogOut size={18} />
                   </button>
