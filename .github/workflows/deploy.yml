@@ -1,5 +1,6 @@
-# Static content; deployment to GitHub Pages
-name: Deploy static content to Pages
+# Workflow para publicar o Portal E-SIC no GitHub Pages
+name: 🚀 Publicar Portal E-SIC
+
 
 on:
   # Runs on pushes targeting the default branch
