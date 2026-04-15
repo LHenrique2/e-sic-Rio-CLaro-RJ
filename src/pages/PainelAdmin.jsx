@@ -3,17 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   CheckCircle, Clock, AlertCircle, LogOut,
-  FileText, Search, User, Filter, Users
+  FileText, Search, User, Filter, Users, Eye, MessageSquare, Send, X, ArrowRightLeft
 } from 'lucide-react';
 import GerenciarServidores from './GerenciarServidores';
-
-const pedidos = [
-  { id: 'RC-2026-0014', cidadao: 'João Silva', cpf: '***.***.456-78', assunto: 'Licitações de Obras Públicas', data: '28/03/2026', prazo: '18/04/2026', diasRestantes: 17, status: 'Novo', secretaria: 'Secretaria de Obras e Infraestrutura' },
-  { id: 'RC-2026-0013', cidadao: 'Maria Oliveira', cpf: '***.***.123-90', assunto: 'Folha de Pagamento dos Servidores', data: '25/03/2026', prazo: '04/04/2026', diasRestantes: 3, status: 'Em Análise', secretaria: 'Secretaria de Administração' },
-  { id: 'RC-2026-0012', cidadao: 'Carlos Souza', cpf: '***.***.789-11', assunto: 'Contratos de Saúde Municipal', data: '20/03/2026', prazo: '30/03/2026', diasRestantes: -2, status: 'Atrasado', secretaria: 'Secretaria de Saúde' },
-  { id: 'RC-2026-0011', cidadao: 'Ana Ferreira', cpf: '***.***.321-44', assunto: 'Gastos com Merenda Escolar', data: '15/03/2026', prazo: '25/03/2026', diasRestantes: 0, status: 'Respondido', secretaria: 'Secretaria de Educação' },
-  { id: 'RC-2026-0010', cidadao: 'Pedro Lima', cpf: '***.***.654-22', assunto: 'Obras de Pavimentação da Rua XV', data: '10/03/2026', prazo: '20/03/2026', diasRestantes: 0, status: 'Respondido', secretaria: 'Secretaria de Obras e Infraestrutura' },
-];
 
 const statusConfig = {
   'Novo':       { bg: '#dbeafe', color: '#1d4ed8' },
@@ -23,11 +15,34 @@ const statusConfig = {
 };
 
 export default function PainelAdmin() {
-  const { user, logout } = useAuth();
+  const { user, logout, pedidos, responderPedido, atualizarStatusPedido, SECRETARIAS, salvarPedidos } = useAuth();
   const navigate = useNavigate();
   const [aba, setAba] = useState('pedidos'); // 'pedidos' | 'servidores'
   const [filtro, setFiltro] = useState('Todos');
   const [busca, setBusca] = useState('');
+
+  // Estados do Modal
+  const [modalPedido, setModalPedido] = useState(null);
+  const [modoModal, setModoModal] = useState('ver'); // 'ver' | 'responder' | 'tramitar'
+  const [textoResposta, setTextoResposta] = useState('');
+  const [novaSecretaria, setNovaSecretaria] = useState('');
+
+  function abrirPedido(pedido, modo = 'ver') {
+    setModalPedido(pedido);
+    setModoModal(modo);
+    setTextoResposta(pedido.resposta || '');
+    setNovaSecretaria(pedido.secretaria);
+  }
+
+  function handleResponder() {
+    responderPedido(modalPedido.id, textoResposta, user.nome);
+    setModalPedido(null);
+  }
+
+  function handleTramitar() {
+    tramitarPedido(modalPedido.id, novaSecretaria);
+    setModalPedido(null);
+  }
 
   const handleLogout = () => {
     logout();
@@ -179,9 +194,20 @@ export default function PainelAdmin() {
                             <span style={{ background: st.bg, color: st.color, padding: '0.3rem 0.8rem', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: '700' }}>{p.status}</span>
                           </td>
                           <td style={{ padding: '1rem 1.25rem' }}>
-                            <button style={{ background: '#0a4d8c', color: 'white', border: 'none', borderRadius: '0.4rem', padding: '0.4rem 0.9rem', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}>
-                              Tramitar
-                            </button>
+                            <div style={{ display: 'flex', gap: '0.4rem' }}>
+                              <button onClick={() => abrirPedido(p, 'ver')} title="Ver" 
+                                style={{ background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '0.4rem', padding: '0.4rem 0.6rem', cursor: 'pointer', display: 'flex' }}>
+                                <Eye size={15} />
+                              </button>
+                              <button onClick={() => abrirPedido(p, 'tramitar')} title="Tramitar"
+                                style={{ background: '#e0f2fe', color: '#0369a1', border: 'none', borderRadius: '0.4rem', padding: '0.4rem 0.6rem', cursor: 'pointer', display: 'flex' }}>
+                                <ArrowRightLeft size={15} />
+                              </button>
+                              <button onClick={() => abrirPedido(p, 'responder')} title="Responder"
+                                style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '0.4rem', padding: '0.4rem 0.6rem', cursor: 'pointer', display: 'flex' }}>
+                                <MessageSquare size={15} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -196,6 +222,108 @@ export default function PainelAdmin() {
         {/* ─── ABA SERVIDORES ─── */}
         {aba === 'servidores' && <GerenciarServidores />}
       </div>
+
+      {/* Modal de Detalhes / Resposta / Tramitação */}
+      {modalPedido && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={e => { if (e.target === e.currentTarget) setModalPedido(null); }}>
+          <div style={{ background: 'white', borderRadius: '1rem', width: '100%', maxWidth: '640px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
+            
+            <div style={{ background: '#0a4d8c', padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '0.8rem', fontWeight: '600' }}>{modalPedido.id}</p>
+                <h3 style={{ color: 'white', margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>
+                  {modoModal === 'ver' && 'Detalhes da Solicitação'}
+                  {modoModal === 'responder' && 'Responder Solicitação'}
+                  {modoModal === 'tramitar' && 'Tramitar para Secretaria'}
+                </h3>
+              </div>
+              <button onClick={() => setModalPedido(null)} style={{ color: 'white', background: 'rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '0.4rem' }}><X size={20}/></button>
+            </div>
+
+            <div style={{ padding: '2rem', maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* Informações permanentes no modal */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' }}>Cidadão</span>
+                  <p style={{ margin: 0, fontWeight: '700', fontSize: '0.9rem' }}>{modalPedido.cidadao}</p>
+                </div>
+                <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '0.5rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' }}>Responsável Atual</span>
+                  <p style={{ margin: 0, fontWeight: '700', fontSize: '0.9rem', color: '#0369a1' }}>{modalPedido.secretaria}</p>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' }}>Assunto</span>
+                <p style={{ margin: '0.25rem 0 0', fontWeight: '700', fontSize: '1.05rem' }}>{modalPedido.assunto}</p>
+              </div>
+
+              <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '0.75rem', marginBottom: '1.5rem', border: '1px solid #e2e8f0' }}>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase' }}>Conteúdo da Solicitação</span>
+                <p style={{ margin: '0.75rem 0 0', lineHeight: '1.6', color: '#334155' }}>{modalPedido.detalhamento}</p>
+              </div>
+
+              {/* MODO RESPONDER */}
+              {modoModal === 'responder' && (
+                <div>
+                    <label style={{ display: 'block', fontWeight: '700', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Resposta do Admin ao Cidadão *</label>
+                    <textarea 
+                        rows={5} 
+                        className="form-input" 
+                        value={textoResposta} 
+                        onChange={e => setTextoResposta(e.target.value)}
+                        placeholder="Escreva a resposta aqui..."
+                    />
+                </div>
+              )}
+
+              {/* MODO TRAMITAR */}
+              {modoModal === 'tramitar' && (
+                <div>
+                    <label style={{ display: 'block', fontWeight: '700', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Nova Secretaria Responsável *</label>
+                    <select 
+                        className="form-input" 
+                        value={novaSecretaria} 
+                        onChange={e => setNovaSecretaria(e.target.value)}
+                    >
+                        {SECRETARIAS.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                    </select>
+                    <p style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#64748b' }}>
+                        Ao tramitar, o status voltará para <strong>'Em Análise'</strong> e o servidor da respectiva pasta será notificado.
+                    </p>
+                </div>
+              )}
+
+              {/* RESPOSTA EXISTENTE (se houver e estiver em modo ver) */}
+              {modoModal === 'ver' && modalPedido.resposta && (
+                  <div style={{ background: '#dcfce7', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid #86efac' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <CheckCircle size={18} color="#15803d" />
+                          <span style={{ fontWeight: '800', color: '#15803d', fontSize: '0.75rem', textTransform: 'uppercase' }}>Respondido em {modalPedido.dataResposta}</span>
+                      </div>
+                      <p style={{ margin: 0, color: '#166534', lineHeight: '1.6' }}>{modalPedido.resposta}</p>
+                  </div>
+              )}
+            </div>
+
+            <div style={{ padding: '1.25rem 2rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', background: '#f8fafc' }}>
+                <button onClick={() => setModalPedido(null)} className="btn" style={{ fontWeight: '600' }}>Fechar</button>
+                {modoModal === 'responder' && (
+                    <button onClick={handleResponder} className="btn-primary btn">
+                        <Send size={16} /> Enviar Resposta
+                    </button>
+                )}
+                {modoModal === 'tramitar' && (
+                    <button onClick={handleTramitar} className="btn-secondary btn">
+                        <ArrowRightLeft size={16} /> Confirmar Tramitação
+                    </button>
+                )}
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

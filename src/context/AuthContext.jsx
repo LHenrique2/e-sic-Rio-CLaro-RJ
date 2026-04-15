@@ -18,6 +18,21 @@ const PEDIDOS_INICIAIS = [
   { id: 'RC-2026-0010', cidadao: 'Pedro Lima', cpf: '***.***.654-22', assunto: 'Obras de Pavimentação', detalhamento: 'Quero informações sobre o andamento das obras de pavimentação da Rua XV de Novembro.', data: '10/03/2026', prazo: '20/03/2026', diasRestantes: 0, status: 'Respondido', secretaria: 'Secretaria de Obras e Infraestrutura', resposta: 'As obras de pavimentação da Rua XV estão com 78% de conclusão, com previsão de término para 15/04/2026. Documentação completa disponível na Secretaria de Obras.', respondidoPor: 'Fernanda Costa', dataResposta: '18/03/2026' },
 ];
 
+const SECRETARIAS = [
+  'Secretaria de Administração',
+  'Secretaria de Educação',
+  'Secretaria de Saúde',
+  'Secretaria de Obras e Infraestrutura',
+  'Secretaria de Finanças',
+  'Secretaria de Meio Ambiente',
+  'Secretaria de Assistência Social',
+  'Secretaria de Transporte',
+  'Secretaria de Cultura e Turismo',
+  'Secretaria de Esporte e Lazer',
+  'Gabinete do Prefeito',
+  'Controladoria Geral',
+];
+
 // Versão dos dados — incrementar aqui força reset dos servidores iniciais
 const DATA_VERSION = 'v3';
 
@@ -56,6 +71,31 @@ export function AuthProvider({ children }) {
   function salvarPedidos(lista)   { setPedidos(lista);   localStorage.setItem('esic_pedidos',   JSON.stringify(lista)); }
 
   // ── Pedidos ──
+  function criarPedido(dados) {
+    const hoje = new Date();
+    const dataFormatada = hoje.toLocaleDateString('pt-BR');
+    
+    // Prazo de 20 dias (lei de acesso à informação)
+    const prazoObjeto = new Date(hoje);
+    prazoObjeto.setDate(hoje.getDate() + 20);
+    const prazoFormatado = prazoObjeto.toLocaleDateString('pt-BR');
+
+    const novo = {
+      ...dados,
+      id: `RC-2026-${String(pedidos.length + 15).padStart(4, '0')}`,
+      data: dataFormatada,
+      prazo: prazoFormatado,
+      diasRestantes: 20,
+      status: 'Novo',
+      resposta: null,
+      respondidoPor: null,
+      dataResposta: null
+    };
+    
+    const novaLista = [novo, ...pedidos];
+    salvarPedidos(novaLista);
+    return novo;
+  }
   function responderPedido(id, resposta, nomeServidor) {
     const hoje = new Date().toLocaleDateString('pt-BR');
     const lista = pedidos.map(p =>
@@ -68,6 +108,10 @@ export function AuthProvider({ children }) {
 
   function atualizarStatusPedido(id, status) {
     salvarPedidos(pedidos.map(p => p.id === id ? { ...p, status } : p));
+  }
+
+  function tramitarPedido(id, secretaria) {
+    salvarPedidos(pedidos.map(p => p.id === id ? { ...p, secretaria, status: 'Em Análise' } : p));
   }
 
   // ── Auth ──
@@ -125,7 +169,8 @@ export function AuthProvider({ children }) {
       user, login, loginCidadao, logout,
       cadastrarCidadao, cidadaos,
       servidores, cadastrarServidor, editarServidor, toggleServidorAtivo, removerServidor,
-      pedidos, responderPedido, atualizarStatusPedido,
+      pedidos, criarPedido, responderPedido, atualizarStatusPedido, tramitarPedido,
+      SECRETARIAS,
     }}>
       {children}
     </AuthContext.Provider>

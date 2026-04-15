@@ -1,8 +1,10 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Shield, FileText, Search, Scale } from 'lucide-react';
+import { Shield, FileText, Search, Scale, User, LogOut } from 'lucide-react';
+import { useAuth } from './context/AuthContext';
 
 function App() {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -33,10 +35,22 @@ function App() {
             <Link to="/admin" className={`nav-link ${location.pathname.includes('/admin') ? 'active-pill' : ''}`}>
               <Scale size={18} /> Lei de Acesso
             </Link>
-            <div style={{ paddingLeft: '1rem', borderLeft: '1px solid var(--border-color)' }}>
-              <Link to="/login" className="btn-header">
-                Entrar
-              </Link>
+            <div style={{ paddingLeft: '1rem', borderLeft: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {user ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', lineHeight: '1' }}>{user.nome}</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>{user.perfil}</span>
+                  </div>
+                  <button onClick={logout} style={{ background: '#f1f5f9', border: 'none', borderRadius: '0.5rem', padding: '0.5rem', cursor: 'pointer', color: '#64748b', display: 'flex' }} title="Sair">
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              ) : (
+                <Link to="/login" className="btn-header">
+                  Entrar
+                </Link>
+              )}
             </div>
           </nav>
 

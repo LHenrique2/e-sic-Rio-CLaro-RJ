@@ -1,15 +1,34 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, LogIn, UserPlus, ShieldCheck, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function NovoPedido() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, criarPedido, SECRETARIAS } = useAuth();
+  const [formData, setFormData] = useState({
+    secretaria: '',
+    assunto: '',
+    detalhamento: ''
+  });
+  const [enviando, setEnviando] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Pedido criado com sucesso! O Protocolo é: RC-2026-0015');
-    navigate('/cidadao');
+    setEnviando(true);
+
+    // Simula um delay de processamento
+    setTimeout(() => {
+      const novo = criarPedido({
+        ...formData,
+        cidadao: user.nome,
+        cpf: user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.***.$3-$4') // Mascarado
+      });
+      
+      setEnviando(false);
+      alert(`Pedido criado com sucesso! O Protocolo é: ${novo.id}`);
+      navigate('/cidadao');
+    }, 800);
   };
 
   // ─── Usuário não logado: tela de bloqueio ───
@@ -87,23 +106,29 @@ export default function NovoPedido() {
           <div className="grid-cols-3" style={{ gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Órgão Solicitado</label>
-              <select className="form-input" required>
+              <select 
+                className="form-input" 
+                required 
+                value={formData.secretaria}
+                onChange={e => setFormData({...formData, secretaria: e.target.value})}
+              >
                 <option value="">Selecione a Secretaria...</option>
-                <option value="saude">Secretaria Municipal de Saúde</option>
-                <option value="educacao">Secretaria Municipal de Educação</option>
-                <option value="obras">Secretaria Municipal de Obras</option>
-                <option value="administracao">Secretaria de Administração</option>
-                <option value="financas">Secretaria de Finanças</option>
-                <option value="meio-ambiente">Secretaria de Meio Ambiente</option>
-                <option value="assistencia">Secretaria de Assistência Social</option>
-                <option value="gabinete">Gabinete do Prefeito</option>
-                <option value="outros">Outros Órgãos ou Indefinido</option>
+                {SECRETARIAS.map(sec => (
+                  <option key={sec} value={sec}>{sec}</option>
+                ))}
               </select>
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Assunto</label>
-              <input type="text" className="form-input" placeholder="Ex: Licitação da praça, Gastos do mês..." required />
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Ex: Licitação da praça, Gastos do mês..." 
+                required 
+                value={formData.assunto}
+                onChange={e => setFormData({...formData, assunto: e.target.value})}
+              />
             </div>
           </div>
 
@@ -114,6 +139,8 @@ export default function NovoPedido() {
               rows="6"
               placeholder="Descreva a informação pública que deseja obter de forma clara e objetiva para facilitar o atendimento..."
               required
+              value={formData.detalhamento}
+              onChange={e => setFormData({...formData, detalhamento: e.target.value})}
             ></textarea>
             <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               É proibido exigir motivos para a solicitação de informação de interesse público (Art. 10, §3º da LAI).
@@ -122,8 +149,8 @@ export default function NovoPedido() {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
             <Link to="/" className="btn btn-outline" style={{ border: 'none', color: 'var(--text-muted)' }}>Cancelar</Link>
-            <button type="submit" className="btn btn-primary">
-              <Send size={18} /> Enviar Pedido
+            <button type="submit" className="btn btn-primary" disabled={enviando}>
+              <Send size={18} /> {enviando ? 'Enviando...' : 'Enviar Pedido'}
             </button>
           </div>
         </form>

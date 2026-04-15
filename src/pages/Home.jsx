@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
-import { FileText, Search, Scale, AlertCircle, ArrowRight } from 'lucide-react';
+import { FileText, Search, Scale, AlertCircle, ArrowRight, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <>
       <section className="hero">
@@ -10,11 +13,20 @@ export default function Home() {
         <div className="container">
           <div className="hero-content">
             <span className="hero-badge">TRANSPARÊNCIA PÚBLICA</span>
-            <h1>
-              Sistema Eletrônico do<br />
-              Serviço de Informação<br />
-              ao Cidadão
-            </h1>
+            {user ? (
+               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.75rem', borderRadius: '50%', display: 'flex' }}>
+                    <User size={32} color="white" />
+                  </div>
+                  <h1 style={{ marginBottom: 0, fontSize: '2.5rem' }}>Olá, {user.nome.split(' ')[0]}!</h1>
+               </div>
+            ) : (
+              <h1>
+                Sistema Eletrônico do<br />
+                Serviço de Informação<br />
+                ao Cidadão
+              </h1>
+            )}
             <p>
               O e-SIC permite que qualquer pessoa, física ou jurídica, encaminhe
               pedidos de acesso à informação para órgãos e entidades da Prefeitura

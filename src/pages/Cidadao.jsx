@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Info, CheckCircle, Clock, AlertCircle, X, FileText } from 'lucide-react';
+import { Search, Info, CheckCircle, Clock, AlertCircle, X, FileText, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const statusConfig = {
@@ -11,10 +11,16 @@ const statusConfig = {
 };
 
 export default function Cidadao() {
-  const { pedidos } = useAuth();
+  const { user, pedidos } = useAuth();
   const [protocolo, setProtocolo] = useState('');
   const [resultado, setResultado] = useState(null); // null | 'nao_encontrado' | objeto pedido
   const [buscado, setBuscado] = useState(false);
+
+  // Filtra pedidos do usuário logado (pelo CPF mascarado ou nome)
+  const meusPedidos = user ? pedidos.filter(p => 
+    p.cpf === user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.***.$3-$4') ||
+    p.cpf === user.cpf // Caso o CPF já esteja limpo no contexto
+  ) : [];
 
   function consultar(e) {
     e.preventDefault();
@@ -22,6 +28,13 @@ export default function Cidadao() {
     const encontrado = pedidos.find(p => p.id.toUpperCase() === protocolo.trim().toUpperCase());
     setResultado(encontrado || 'nao_encontrado');
     setBuscado(true);
+  }
+
+  function selecionarPedido(pedido) {
+    setResultado(pedido);
+    setProtocolo(pedido.id);
+    setBuscado(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function limpar() {
@@ -198,12 +211,72 @@ export default function Cidadao() {
 
         {/* Link fazer pedido */}
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 0.75rem' }}>Ainda não tem um pedido?</p>
+          <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 0.75rem' }}>Deseja registrar uma nova solicitação?</p>
           <Link to="/novo-pedido"
             style={{ background: '#127246', color: 'white', padding: '0.75rem 2rem', borderRadius: '0.5rem', fontWeight: '700', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
             <FileText size={18} /> Fazer um Pedido
           </Link>
         </div>
+
+        {/* Lista de Meus Pedidos (Aparece apenas quando não há busca ativa) */}
+        {!buscado && user && meusPedidos.length > 0 && (
+          <div style={{ marginTop: '3rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div style={{ background: '#0a4d8c', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                <FileText size={18} />
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: '#0f172a' }}>Meus Pedidos Recentes</h2>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {meusPedidos.map(p => (
+                <button 
+                  key={p.id} 
+                  onClick={() => selecionarPedido(p)}
+                  style={{ 
+                    background: 'white', border: '1px solid #e2e8f0', borderRadius: '1rem', 
+                    padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', 
+                    alignItems: 'center', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.04)' 
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = '#0a4d8c';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = '#e2e8f0';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.04)';
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
+                      <span style={{ fontWeight: '800', color: '#0a4d8c', fontSize: '0.95rem' }}>{p.id}</span>
+                      <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>• {p.data}</span>
+                    </div>
+                    <p style={{ margin: 0, fontWeight: '600', color: '#0f172a', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '350px' }}>
+                      {p.assunto}
+                    </p>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{
+                      background: statusConfig[p.status]?.bg,
+                      color: statusConfig[p.status]?.color,
+                      padding: '0.35rem 0.85rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '700',
+                      display: 'flex', alignItems: 'center', gap: '0.35rem', whiteSpace: 'nowrap'
+                    }}>
+                      {statusConfig[p.status]?.icon}
+                      {p.status}
+                    </span>
+                    <ArrowRight size={18} color="#94a3b8" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
