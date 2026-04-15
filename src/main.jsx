@@ -26,8 +26,9 @@ function RotaServidor({ children }) {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/e-sic-Rio-CLaro-RJ">
         <Routes>
+
           <Route path="/" element={<App />}>
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />

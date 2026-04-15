@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Shield, FileText, Search, Scale, User, LogOut } from 'lucide-react';
 import { useAuth } from './context/AuthContext';
+import brasao from './image/brasao.png';
 
 function App() {
   const location = useLocation();
@@ -11,7 +12,7 @@ function App() {
       <header style={{ borderBottom: '1px solid var(--border-color)', background: 'white' }}>
         <div className="container header-inner">
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
-            <img src="/src/image/brasao.png" alt="Brasão de Rio Claro" style={{ width: '52px', height: '52px', objectFit: 'contain' }} />
+            <img src={brasao} alt="Brasão de Rio Claro" style={{ width: '52px', height: '52px', objectFit: 'contain' }} />
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2' }}>
               <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)', maxWidth: '250px' }}>
                 Prefeitura Municipal de Rio Claro - RJ
@@ -67,7 +68,7 @@ function App() {
           {/* Column 1: Brand / Text */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-              <img src="/src/image/brasao.png" alt="Brasão de Rio Claro" style={{ width: '56px', height: '56px', objectFit: 'contain' }} />
+              <img src={brasao} alt="Brasão de Rio Claro" style={{ width: '56px', height: '56px', objectFit: 'contain' }} />
               <span style={{ fontSize: '1.5rem', fontWeight: '800' }}>Rio Claro - RJ</span>
             </div>
             <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.95rem', lineHeight: '1.6', maxWidth: '350px' }}>

@@ -2,7 +2,9 @@
   "name": "nova-pasta",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://LHenrique2.github.io/e-sic-Rio-CLaro-RJ/",
   "type": "module",
+
   "scripts": {
     "dev": "vite",
     "build": "vite build",
