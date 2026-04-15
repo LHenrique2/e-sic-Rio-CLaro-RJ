@@ -17,15 +17,15 @@ export default function Cidadao() {
   const [buscado, setBuscado] = useState(false);
 
   // Filtra pedidos do usuário logado (pelo CPF mascarado ou nome)
-  const meusPedidos = user ? pedidos.filter(p => 
+  const meusPedidos = (user && user.cpf && Array.isArray(pedidos)) ? pedidos.filter(p => 
     p.cpf === user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.***.$3-$4') ||
-    p.cpf === user.cpf // Caso o CPF já esteja limpo no contexto
+    p.cpf === user.cpf 
   ) : [];
 
   function consultar(e) {
     e.preventDefault();
-    if (!protocolo.trim()) return;
-    const encontrado = pedidos.find(p => p.id.toUpperCase() === protocolo.trim().toUpperCase());
+    if (!protocolo.trim() || !Array.isArray(pedidos)) return;
+    const encontrado = pedidos.find(p => p.id && p.id.toUpperCase() === protocolo.trim().toUpperCase());
     setResultado(encontrado || 'nao_encontrado');
     setBuscado(true);
   }
